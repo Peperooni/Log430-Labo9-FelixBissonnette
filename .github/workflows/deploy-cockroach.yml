@@ -1,0 +1,36 @@
+name: Deploy CockroachDB
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'cockroach-db/**'
+
+jobs:
+  deploy:
+    name: Deploy to server
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        working-directory: cockroach-db
+        run: |
+          cat > .env <<EOF
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          EOF
+
+      - name: Deploy with Docker Compose
+        working-directory: cockroach-db
+        run: |
+          docker compose down
+          docker compose pull
+          docker compose up -d --build
+          echo "Deployment complete."
