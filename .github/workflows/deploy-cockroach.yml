@@ -8,9 +8,45 @@ on:
       - 'cockroach-db/**'
 
 jobs:
+  test:
+    name: Run concurrency tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Create .env file
+        working-directory: cockroach-db
+        run: |
+          cat > .env <<EOF
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+          EOF
+
+      - name: Start stack
+        working-directory: cockroach-db
+        run: docker compose up -d --build --wait
+
+      - name: Install test dependencies
+        run: pip install requests
+
+      - name: Run concurrency_test.py
+        working-directory: cockroach-db/src/tests
+        run: python concurrency_test.py --host http://localhost:5000
+
+      - name: Tear down stack
+        if: always()
+        working-directory: cockroach-db
+        run: docker compose down -v
+
   deploy:
-    name: Deploy to server
+    name: Deploy to VM
     runs-on: self-hosted
+    needs: test
 
     steps:
       - name: Checkout code
