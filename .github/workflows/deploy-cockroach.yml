@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'cockroach-db/**'
+      - '.github/workflows/deploy-cockroach.yml'
 
 jobs:
   test:
