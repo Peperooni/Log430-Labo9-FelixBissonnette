@@ -37,6 +37,8 @@ jobs:
 
       - name: Run concurrency_test.py
         working-directory: cockroach-db/src/tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/cockroach-db/src
         run: python concurrency_test.py --host http://localhost:5000
 
       - name: Tear down stack
